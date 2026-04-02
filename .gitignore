@@ -1,0 +1,19 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Database
+tasks.db
+
+# Reports (generated at runtime)
+reports/
+
+# macOS
+.DS_Store
+
+# Playwright
+test-results/
+playwright-report/

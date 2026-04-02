@@ -1,0 +1,5 @@
+flask>=3.0.0
+pytest
+pytest-playwright
+pytest-html
+requests
