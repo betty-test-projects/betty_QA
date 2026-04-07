@@ -64,7 +64,15 @@ jobs:
           pytest tests/ --tb=short -v 2>&1 | tee reports/pytest-output.txt
         continue-on-error: true
 
-      # ── 8. Job summary ────────────────────────────────────────────────────────
+      # ── 8. Claude AI — Analyse failures ──────────────────────────────────────
+      - name: Analyse failures with Claude
+        if: always()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python analyze_failures.py
+
+      # ── 9. Job summary ────────────────────────────────────────────────────────
       - name: Write job summary
         if: always()
         run: |
@@ -80,7 +88,7 @@ jobs:
           tail -30 reports/pytest-output.txt >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-      # ── 9. Upload report ──────────────────────────────────────────────────────
+      # ── 10. Upload report ──────────────────────────────────────────────────────
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
@@ -91,7 +99,7 @@ jobs:
             reports/pytest-output.txt
           retention-days: 30
 
-      # ── 10. Upload Playwright artifacts on failure ────────────────────────────
+      # ── 11. Upload Playwright artifacts on failure ────────────────────────────
       - name: Upload Playwright artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4

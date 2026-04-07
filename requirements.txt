@@ -1,5 +1,6 @@
 flask>=3.0.0
-pytest
-pytest-playwright
-pytest-html
-requests
+anthropic>=0.40.0
+playwright>=1.40.0
+pytest>=8.0.0
+pytest-playwright>=0.5.0
+requests>=2.31.0
