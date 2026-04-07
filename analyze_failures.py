@@ -9,6 +9,8 @@ and prints the result to CI log.
 import os
 import sys
 import re
+import urllib.request
+import urllib.parse
 import anthropic
 
 REPORT_PATH = "reports/pytest-output.txt"
@@ -28,10 +30,13 @@ def read_report(path: str) -> str:
 # ── 2. Extract summary line ───────────────────────────────────────────────────
 
 def extract_summary(text: str) -> str:
-    """Extract the final pytest summary line, e.g. '3 failed, 10 passed in 5.2s'"""
+    """Extract the final pytest summary line, e.g. '1 failed, 23 passed in 12.04s'"""
     for line in reversed(text.splitlines()):
         if re.search(r"(passed|failed|error)", line, re.IGNORECASE):
-            return line.strip().strip("=").strip()
+            cleaned = line.strip().strip("=").strip()
+            # Skip section headers — we want the line that contains a number
+            if re.search(r"\d", cleaned):
+                return cleaned
     return "Summary not found"
 
 
@@ -189,6 +194,57 @@ def print_result(analysis: str, failed_count: int, summary: str):
     print(f"{separator}\n")
 
 
+# ── 7. Send Telegram notification ────────────────────────────────────────────
+
+def send_telegram(summary: str, analysis: str):
+    """Send analysis result to Telegram chat."""
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+
+    if not bot_token or not chat_id:
+        print("[analyze] WARNING: Telegram credentials not set — skipping notification.")
+        return
+
+    # Extract overall verdict from analysis text
+    verdict = "UNKNOWN"
+    if "REJECT" in analysis:
+        verdict = "REJECT ❌"
+    elif "APPROVE" in analysis:
+        verdict = "APPROVE ✅"
+
+    # Build a concise Telegram message (Markdown format)
+    message = f"""🤖 *CI Test Analysis*
+
+📊 *Result:* `{summary}`
+🔍 *Verdict:* {verdict}
+
+{analysis}
+
+---
+_Reply /approve to accept · /reject to fail the build_"""
+
+    # Telegram message limit is 4096 chars — truncate if needed
+    if len(message) > 4096:
+        message = message[:4050] + "\n\n_(message truncated)_"
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = urllib.parse.urlencode({
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "Markdown",
+    }).encode("utf-8")
+
+    try:
+        req = urllib.request.Request(url, data=payload, method="POST")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            if resp.status == 200:
+                print("[analyze] Telegram notification sent successfully.")
+            else:
+                print(f"[analyze] WARNING: Telegram returned status {resp.status}")
+    except Exception as e:
+        print(f"[analyze] WARNING: Failed to send Telegram notification: {e}")
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -215,6 +271,7 @@ def main():
     analysis = call_claude(prompt)
 
     print_result(analysis, len(failed_tests), summary)
+    send_telegram(summary, analysis)
 
 
 if __name__ == "__main__":
