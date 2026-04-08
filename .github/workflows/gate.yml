@@ -1,0 +1,37 @@
+name: QA Gate — Human Decision
+
+on:
+  repository_dispatch:
+    types: [qa-approved, qa-rejected]
+
+jobs:
+  gate:
+    name: Human Decision Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Log decision
+        run: |
+          echo "## 🔔 Human Decision Received" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Decision | \`${{ github.event.action }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Triggered by | Telegram webhook |" >> $GITHUB_STEP_SUMMARY
+          echo "| Time | \`${{ github.event.repository.updated_at }}\` |" >> $GITHUB_STEP_SUMMARY
+
+      - name: APPROVED — mark as passed
+        if: github.event.action == 'qa-approved'
+        run: |
+          echo "[gate] Decision: APPROVED ✅"
+          echo "Failures were reviewed and accepted as flaky tests."
+          echo "## ✅ Result: APPROVED" >> $GITHUB_STEP_SUMMARY
+          echo "Failures accepted as flaky — build continues." >> $GITHUB_STEP_SUMMARY
+
+      - name: REJECTED — mark as failed
+        if: github.event.action == 'qa-rejected'
+        run: |
+          echo "[gate] Decision: REJECTED ❌"
+          echo "## ❌ Result: REJECTED" >> $GITHUB_STEP_SUMMARY
+          echo "Real bug detected — build marked as failed." >> $GITHUB_STEP_SUMMARY
+          exit 1

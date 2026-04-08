@@ -17,3 +17,6 @@ reports/
 # Playwright
 test-results/
 playwright-report/
+
+#Environment
+.env
