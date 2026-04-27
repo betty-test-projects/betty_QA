@@ -20,7 +20,6 @@ A simple Task Management web app used as a test target for exploring AI-assisted
 ## Repository Structure
 
 ```
-qa-agent-project/
 ├── app.py                     # Flask Task Manager app
 ├── templates/
 │   └── index.html             # Frontend UI
@@ -50,8 +49,8 @@ qa-agent-project/
 
 ```bash
 # Clone and enter the repo
-git clone https://github.com/<your-username>/qa-agent-project.git
-cd qa-agent-project
+git clone https://github.com/betty-test-projects/betty_QA.git
+cd betty_QA
 
 # Create virtual environment
 python3 -m venv venv
