@@ -126,7 +126,7 @@ Claude reads the pytest output and returns a BUG / FLAKY verdict per failure, pl
 | Environment Variable | Description |
 |---|---|
 | `GITHUB_TOKEN` | Personal access token with `repo` scope |
-| `GITHUB_REPO` | e.g. `your-username/qa-agent-project` |
+| `GITHUB_REPO` | `betty-test-projects/betty_QA` |
 
 ---
 
